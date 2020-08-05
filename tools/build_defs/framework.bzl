@@ -63,6 +63,12 @@ CC_EXTERNAL_RULE_ATTRIBUTES = {
     # Optional tools to be copied into the directory structure.
     # Similar to deps, those directly required for the external building of the library/binaries.
     "tools_deps": attr.label_list(mandatory = False, allow_files = True, default = []),
+
+    # Optional environment variables which will point to the absolute path of the file in
+    # tools_deps dir with the value's name.
+    # e.g. if this is set as {"PERL": "perl6"} the action will have the env var PERL=/path/to/tools/deps/bin/perl6
+    "tools_deps_env_vars": attr.string_dict(),
+
     #
     # Optional name of the output subdirectory with the header files, defaults to 'include'.
     "out_include_dir": attr.string(mandatory = False, default = "include"),
@@ -234,7 +240,7 @@ def cc_external_rule_impl(ctx, attrs):
         "export BUILD_TMPDIR=##tmpdir##",
         "export EXT_BUILD_DEPS=##tmpdir##",
         "export INSTALLDIR=$$EXT_BUILD_ROOT$$/" + empty.file.dirname + "/" + lib_name,
-    ]
+    ] + ["export " + key + "=${EXT_BUILD_DEPS}/bin/" + value for key, value in ctx.attr.tools_deps_env_vars.items()]
 
     script_lines = [
         "##echo## \"\"",
